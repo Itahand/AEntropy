@@ -66,6 +66,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         access(all) fun addTicket(tokenId: UInt64, collectorAddress: Address) {
             let purchased = &self.tickets as &{UInt64: Ticket}
             let ticket = Ticket(tokenId: tokenId, _owner: collectorAddress)
+
             self.tickets[tokenId] = ticket
         }
         access(all) fun isPurchased(tokenId: UInt64): Bool {
@@ -142,7 +143,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         pub case autographed
     }
 
-        pub struct Ticket {
+    pub struct Ticket {
         pub let id: UInt64
         pub let owner: Address
         pub(set) var state: TicketState
@@ -156,7 +157,6 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
             self.randomId = nil
             self.customInput = nil
 
-            AEntropy.ticketSupply = AEntropy.ticketSupply + 1
             emit TicketCreated(ticketId: self.id, receiver: self.owner)
         }
     }
@@ -660,7 +660,10 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
 		let storage = AEntropy.account.borrow<&AEntropy.AEntropyStorage>(from: AEntropy.AEntropyStoragePath)!
         while index < numberOfTokens {
             if !storage.isPurchased(tokenId: self.purchased) {
+                // Add a ticket to the contract's storage
                 storage.addTicket(tokenId: self.purchased, collectorAddress: receiver)
+                // Increase contract's ticket supply
+                AEntropy.ticketSupply = AEntropy.ticketSupply + 1 
                 emit Purchase(tokenId: self.purchased, receiverAddress: receiver)
                 // Update purchased
                 self.purchased = self.purchased + 1
