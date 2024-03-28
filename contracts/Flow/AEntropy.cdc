@@ -5,53 +5,53 @@ import FlowToken from "./standard/FlowToken.cdc"
 import ViewResolver from "./standard/ViewResolver.cdc"
 
 
-pub contract AEntropy: NonFungibleToken, ViewResolver {
+access(all) contract AEntropy: NonFungibleToken, ViewResolver {
 
     // Collection Information
     access(self) let collectionInfo: {String: AnyStruct}
 
     // Contract-level variables
-    pub var totalSupply: UInt64
-    pub var ticketSupply: UInt64
-    pub var purchased: UInt64
-    pub var maxTokensPerPurchase: UInt64
-    pub var deployer: Address
-    pub var maxSupply: UInt64
-    pub var script: String
-    pub var traitScript: String
-    pub var saleActive: Bool
-    pub var pricePerToken: UFix64
+    access(all) var totalSupply: UInt64
+    access(all) var ticketSupply: UInt64
+    access(all) var Purchased: UInt64
+    access(all) var maxTokensPerPurchase: UInt64
+    access(all) var deployer: Address
+    access(all) var maxSupply: UInt64
+    access(all) var script: String
+    access(all) var traitScript: String
+    access(all) var saleActive: Bool
+    access(all) var pricePerToken: UFix64
     // Events
-    pub event ContractInitialized()
-    pub event Purchase(tokenId: UInt64, receiverAddress: Address)
-    pub event MinterCreated(minterId: UInt64)
-    pub event MinterState(canMint: Bool)
-    pub event Minted(id: UInt64, recipient: Address, randomID: UInt64)
-    pub event Withdraw(id: UInt64, from: Address?)
-    pub event Deposit(id: UInt64, to: Address?)
-    pub event Signature(tokenId: UInt64, receiverAddress: Address, randomNumber: UInt64, customInput: String)
-    pub event GenerateImage(tokenId: UInt64, receiverAddress: Address, randomNumber: UInt64)
-    pub event TicketCreated(ticketId: UInt64, receiver:Address)
+    access(all) event ContractInitialized()
+    access(all) event Purchase(tokenId: UInt64, receiverAddress: Address)
+    access(all) event MinterCreated(minterId: UInt64)
+    access(all) event MinterState(canMint: Bool)
+    access(all) event Minted(id: UInt64, recipient: Address, randomId: UInt64)
+    access(all) event Withdraw(id: UInt64, from: Address?)
+    access(all) event Deposit(id: UInt64, to: Address?)
+    access(all) event Signature(tokenId: UInt64, receiverAddress: Address, randomNumber: UInt64, customInput: String)
+    access(all) event GenerateImage(tokenId: UInt64, receiverAddress: Address, randomNumber: UInt64)
+    access(all) event TicketCreated(ticketId: UInt64, receiver:Address)
     // Paths
-    pub let CollectionStoragePath: StoragePath
-    pub let CollectionPublicPath: PublicPath
-    pub let CollectionPrivatePath: PrivatePath
-    pub let AdministratorStoragePath: StoragePath
-    pub let MetadataStoragePath: StoragePath
-    pub let MetadataPublicPath: PublicPath
+    access(all) let CollectionStoragePath: StoragePath
+    access(all) let CollectionPublicPath: PublicPath
+    access(all) let CollectionPrivatePath: PrivatePath
+    access(all) let AdministratorStoragePath: StoragePath
+    access(all) let MetadataStoragePath: StoragePath
+    access(all) let MetadataPublicPath: PublicPath
     // MinterProxy related paths.
-    pub let MinterProxyStoragePath: StoragePath
-    pub let MinterProxyPublicPath: PublicPath
+    access(all) let MinterProxyStoragePath: StoragePath
+    access(all) let MinterProxyPublicPath: PublicPath
     // Ticket related paths
-    pub let AEntropyStoragePath: StoragePath
-    pub let AEntropyStoragePublicPath: PublicPath
+    access(all) let AEntropyStoragePath: StoragePath
+    access(all) let AEntropyStoragePublicPath: PublicPath
 
-    access(account) let nftStorage: @{Address: {UInt64: NFT}}
-    access(account) let minters: {UInt64: Bool}
+    access(all) let nftStorage: @{Address: {UInt64: NFT}}
+    access(all) let minters: {UInt64: Bool}
 
-    pub resource AEntropyStorage: AEntropyStoragePublic {
+    access(all) resource AEntropyStorage: AEntropyStoragePublic {
         // List of tickets
-        pub var tickets: {UInt64: Ticket}
+        access(all) var tickets: {UInt64: Ticket}
 
         init () {
             self.tickets = {}
@@ -60,99 +60,75 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         access(all) fun getTickets(): {UInt64: AEntropy.Ticket}? {
             return self.tickets
         }
-        access(all) fun getTicket(tokenId: UInt64):  Ticket? {
-            return self.tickets[tokenId]
+        access(all) fun getTicket(ticketId: UInt64):  Ticket? {
+            return self.tickets[ticketId]
         }
-        access(all) fun addTicket(tokenId: UInt64, collectorAddress: Address) {
-            let purchased = &self.tickets as &{UInt64: Ticket}
-            let ticket = Ticket(tokenId: tokenId, _owner: collectorAddress)
+        access(all) fun addTicket(ticketId: UInt64, collectorAddress: Address) {
+            let Purchased = &self.tickets as &{UInt64: Ticket}
+            let ticket = Ticket(tokenId: ticketId, _owner: collectorAddress)
 
-            self.tickets[tokenId] = ticket
+            self.tickets[ticketId] = ticket
         }
-        access(all) fun isPurchased(tokenId: UInt64): Bool {
-            if self.tickets[tokenId]?.state == TicketState.purchased {
+        access(all) fun isPurchased(ticketId: UInt64): Bool {
+            if self.tickets[ticketId]?.state == TicketState.Purchased {
                 return true
             } else {
                 return false
             }
         }
-        access(all) fun isRandom(tokenId: UInt64): Bool {
-            if self.tickets[tokenId]?.state == TicketState.random {
+        access(all) fun isRandom(ticketId: UInt64): Bool {
+            if self.tickets[ticketId]?.state == TicketState.Random {
                 return true
             } else {
                 return false
             }
         }
-        access(all) fun isGenerateImg(tokenId: UInt64): Bool {
-            if self.tickets[tokenId]?.state == TicketState.generateimage {
+        access(all) fun isGenerateImg(ticketId: UInt64): Bool {
+            if self.tickets[ticketId]?.state == TicketState.Generateimage {
                 return true
             } else {
                 return false
             }
         }
-        access(all) fun changeToRandom(tokenId: UInt64, randomNumber: UInt64) {
-            let ticket = &self.tickets[tokenId]! as &Ticket
-            ticket.state = TicketState.random
+        access(all) fun changeToRandom(ticketId: UInt64, randomNumber: UInt64) {
+            let ticket = &self.tickets[ticketId]! as &Ticket
+            ticket.state = TicketState.Random
             ticket.randomId = randomNumber
         }
-        access(all) fun changeToGenerateImg(tokenId: UInt64) {
-            let ticket = &self.tickets[tokenId]! as &Ticket
-            ticket.state = TicketState.generateimage
+        access(all) fun changeToGenerateImg(ticketId: UInt64) {
+            let ticket = &self.tickets[ticketId]! as &Ticket
+            ticket.state = TicketState.Generateimage
         }
-        access(all) fun changeToAutographed(tokenId: UInt64) {
-            let ticket = &self.tickets[tokenId]! as &Ticket
-            ticket.state = TicketState.autographed
+        access(all) fun changeToAutographed(ticketId: UInt64) {
+            let ticket = &self.tickets[ticketId]! as &Ticket
+            ticket.state = TicketState.Autographed
         }
-
-        // Fetch all tickets
-/*         pub fun getTickets(): {State: [Ticket]} {
-            return self.tickets
-        } */
-/*         // Fetch tickets that have not generated a randomId
-        pub fun getUnAssigned(): [AEntropy.Ticket]? {
-            return self.tickets[State.purchase]
-        }
-        // Fetch tickets that have not minted their NFTs
-        pub fun getUnMinted(): [AEntropy.Ticket]? {
-            return self.tickets[State.random]
-        }
-        // Fetch tickets that have minted their NFTs but not signed
-        pub fun getUnAssignedTickets(): [AEntropy.Ticket]? {
-            return self.tickets[State.generateimage]
-        }
-        // Fetch tickets that have autographed their NFTs
-        pub fun getAutographed(): [AEntropy.Ticket]? {
-            return self.tickets[State.autographed]
-        } */
     }
     /// Defines the public methods for the Ticket Storgage
     ///
-    pub resource interface AEntropyStoragePublic {
-        pub fun getTicket(tokenId: UInt64): Ticket?
-		pub fun getTickets(): {UInt64: AEntropy.Ticket}?
-/*		pub fun getUnAssigned(): [AEntropy.Ticket]?
-		pub fun getUnMinted(): [AEntropy.Ticket]?
-		pub fun getUnAssignedTickets(): [AEntropy.Ticket]?
-		pub fun getAutographed(): [AEntropy.Ticket]? */
+    access(all) resource interface AEntropyStoragePublic {
+        access(all) fun getTicket(ticketId: UInt64): Ticket?
+		access(all) fun getTickets(): {UInt64: AEntropy.Ticket}?
+
     }
 
-        pub enum TicketState: UInt64 {
-        pub case purchased
-        pub case random
-        pub case generateimage
-        pub case autographed
+    access(all) enum TicketState: UInt64 {
+        pub case Purchased
+        pub case Random
+        pub case Generateimage
+        pub case Autographed
     }
 
-    pub struct Ticket {
-        pub let id: UInt64
-        pub let owner: Address
+    access(all) struct Ticket {
+        access(all) let id: UInt64
+        access(all) let owner: Address
+        access(all) var customInput: String?
         pub(set) var state: TicketState
         pub(set) var randomId: UInt64?
-        pub var customInput: String?
 
         init(tokenId: UInt64, _owner: Address) {
             self.id = tokenId
-            self.state = TicketState.purchased
+            self.state = TicketState.Purchased
             self.owner = _owner
             self.randomId = nil
             self.customInput = nil
@@ -161,20 +137,20 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         }
     }
 
-    pub resource NFT: NonFungibleToken.INFT, MetadataViews.Resolver {
-        pub let id: UInt64
+    access(all) resource NFT: NonFungibleToken.INFT, MetadataViews.Resolver {
+        access(all) let id: UInt64
         // The 'metadataId' is what maps this NFT to its 'SVG'
-        pub let randomID: UInt64
-        pub let originalMinter: Address
-        pub var signature: String
-        pub var SVG: String
-        pub let extra: {String: AnyStruct}
-        pub let script: String
-        pub var Autographed: Bool
-        pub var svgUpdated: Bool
+        access(all) let randomId: UInt64
+        access(all) let originalMinter: Address
+        access(all) var signature: String
+        access(all) var SVG: String
+        access(all) let extra: {String: AnyStruct}
+        access(all) let script: String
+        access(all) var Autographed: Bool
+        access(all) var svgUpdated: Bool
 
         init(
-            _randomID: UInt64,
+            _randomId: UInt64,
             _recipient: Address,
             _extra: {String: AnyStruct},
             _SVG: String,
@@ -183,7 +159,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
 
             // Assign serial number to the NFT based on the number of minted NFTs
             self.id = _tokenId
-            self.randomID = _randomID
+            self.randomId = _randomId
             self.originalMinter = _recipient
             self.extra = _extra
             self.signature = ""
@@ -195,10 +171,10 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
             // Update AEntropy collection NFTs count
             AEntropy.totalSupply = AEntropy.totalSupply + 1
 
-            emit Minted(id: self.id, recipient: _recipient, randomID: _randomID)
+            emit Minted(id: self.id, recipient: _recipient, randomId: _randomId)
         }
 
-        pub fun updateSignature(input: String) {
+        access(all) fun updateSignature(input: String) {
             pre {
                 self.Autographed == false: "This NFT's signature has already been updated"
             }
@@ -208,7 +184,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
             self.Autographed = true
         }
 
-        pub fun updateSVG(input: String) {
+        access(all) fun updateSVG(input: String) {
             pre {
                 self.Autographed == true: "This NFT's signature has not been updated"
                 self.svgUpdated == false: "This NFT's SVG has already been updated"
@@ -219,7 +195,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
             self.svgUpdated = true
         }
 
-        pub fun getViews(): [Type] {
+        access(all) fun getViews(): [Type] {
             return [
                 Type<MetadataViews.Display>(),
                 Type<MetadataViews.ExternalURL>(),
@@ -231,12 +207,12 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
             ]
         }
 
-        pub fun resolveView(_ view: Type): AnyStruct? {
+        access(all) fun resolveView(_ view: Type): AnyStruct? {
             switch view {
                 case Type<MetadataViews.Display>():
 
                     return MetadataViews.Display(
-                        randomID: self.randomID.toString(),
+                        randomId: self.randomId.toString(),
                         description: "First on-chain generative art collection on the Flow blockchain.",
                         thumbnail: MetadataViews.HTTPFile(
                                 url: self.SVG,
@@ -285,23 +261,25 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
 
     /// Defines the methods that are particular to this NFT contract collection
     ///
-    pub resource interface AEntropyCollectionPublic {
-        pub fun deposit(token: @NonFungibleToken.NFT)
-        pub fun getIDs(): [UInt64]
-        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
-        pub fun borrowAEntropy(id: UInt64): &AEntropy.NFT? {
-            post {
-                (result == nil) || (result?.id == id):
-                    "Cannot borrow AEntropy NFT reference: the ID of the returned reference is incorrect"
-            }
-        }
+    access(all) resource interface AEntropyCollectionPublic {
+        access(all) fun deposit(token: @NonFungibleToken.NFT)
+        access(all) fun getIDs(): [UInt64]
+        access(all) fun borrowNFT(id: UInt64): &NonFungibleToken.NFT
     }
 
-    pub resource Collection: AEntropyCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, MetadataViews.ResolverCollection {
+    access(all) resource Collection: AEntropyCollectionPublic, NonFungibleToken.Provider, NonFungibleToken.Receiver, NonFungibleToken.CollectionPublic, MetadataViews.ResolverCollection {
 
-        pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
+        access(all) var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
+        // Withdraw removes an NFT from the collection and moves it to the caller(for Trading)
+        access(all) fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
+            let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
+
+            emit Withdraw(id: token.id, from: self.owner?.address)
+
+            return <-token
+        }
         // Update an NFT's signature with a custom input
-        pub fun updateSignature(tokenId: UInt64, customInput: String) {
+        access(all) fun updateSignature(tokenId: UInt64, customInput: String) {
             // Fetch reference to the NFT in order to use its functions
             let nftRef = self.borrowAEntropy(id: tokenId)!
             // update the signature
@@ -309,32 +287,24 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
             // withdraw the nft from the collection
             let nft <- self.withdraw(withdrawID: tokenId)
             // get AEntropy's contract collection resource and deposit it there
-            			// Fetch StoragePath for this randomID and recipient
+            			// Fetch StoragePath for this randomId and recipient
 			let identifier = "AEntropySVGStorage_".concat(nft.id.toString()).concat("_").concat(self.owner!.address.toString())
 			let path = StoragePath(identifier: identifier)!
 
-            emit Signature(tokenId: tokenId, receiverAddress: self.owner?.address!, randomNumber: nftRef.randomID, customInput: customInput)
+            emit Signature(tokenId: tokenId, receiverAddress: self.owner?.address!, randomNumber: nftRef.randomId, customInput: customInput)
 
 			AEntropy.account.save(<- nft, to: path)
         }
         // Update an NFT's signature with a custom input
-        pub fun updateSVG(tokenId: UInt64, customInput: String) {
+        access(all) fun updateSVG(tokenId: UInt64, customInput: String) {
             // Fetch reference to the NFT in order to use its functions
             let nftRef = self.borrowAEntropy(id: tokenId)!
             // update the signature
             nftRef.updateSVG(input: customInput)
         }
-        // Withdraw removes an NFT from the collection and moves it to the caller(for Trading)
-        pub fun withdraw(withdrawID: UInt64): @NonFungibleToken.NFT {
-            let token <- self.ownedNFTs.remove(key: withdrawID) ?? panic("missing NFT")
-
-            emit Withdraw(id: token.id, from: self.owner?.address)
-
-            return <-token
-        }
         // Deposit takes a NFT and adds it to the collections dictionary
         // and adds the ID to the id array
-        pub fun deposit(token: @NonFungibleToken.NFT) {
+        access(all) fun deposit(token: @NonFungibleToken.NFT) {
             let token <- token as! @NFT
 
             let id: UInt64 = token.id
@@ -346,12 +316,12 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         }
 
         // GetIDs returns an array of the IDs that are in the collection
-        pub fun getIDs(): [UInt64] {
+        access(all) fun getIDs(): [UInt64] {
             return self.ownedNFTs.keys
         }
 
         // BorrowNFT gets a reference to an NFT in the collection
-        pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
+        access(all) fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
             return (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
         }
 
@@ -361,7 +331,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         /// @param id: The ID of the wanted NFT
         /// @return A reference to the wanted NFT resource
         ///
-        pub fun borrowAEntropy(id: UInt64): &AEntropy.NFT? {
+        access(all) fun borrowAEntropy(id: UInt64): &AEntropy.NFT? {
             if self.ownedNFTs[id] != nil {
                 // Create an authorized reference to allow downcasting
                 let ref = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
@@ -371,13 +341,13 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
             return nil
         }
 
-        pub fun borrowViewResolver(id: UInt64): &AnyResource{MetadataViews.Resolver} {
+        access(all) fun borrowViewResolver(id: UInt64): &AnyResource{MetadataViews.Resolver} {
             let token = (&self.ownedNFTs[id] as auth &NonFungibleToken.NFT?)!
             let nft = token as! &NFT
             return nft
         }
 
-        pub fun claim() {
+        access(all) fun claim() {
             if let storage = &AEntropy.nftStorage[self.owner!.address] as &{UInt64: NFT}? {
                 for id in storage.keys {
                     self.deposit(token: <- storage.remove(key: id)!)
@@ -394,7 +364,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         }
     }
 
-    pub resource Administrator {
+    access(all) resource Administrator {
         // This sets the script for the contract
         // this is necessary so that we don't always call mintNFT with the script parameter
         pub fun setScript(script: String) {
@@ -422,24 +392,24 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         }
 
         // Create a new Administrator resource
-        pub fun createAdmin(): @Administrator {
+        access(all) fun createAdmin(): @Administrator {
             return <- create Administrator()
         }
 
         // Mint NFTs without payment
-        pub fun purchase(numberOfTokens: UInt64, receiver: Address) {
+        access(all) fun purchase(numberOfTokens: UInt64, receiver: Address) {
             pre {
                 AEntropy.script != "": "Script has not been set yet"
                 AEntropy.traitScript != "": "Traits has not been set yet"
-                AEntropy.purchased + numberOfTokens < AEntropy.maxSupply: "Not enough supply available"
+                AEntropy.Purchased + numberOfTokens < AEntropy.maxSupply: "Not enough supply available"
             }
 
             var index: UInt64 = 0
-            // Update purchased
+            // Update Purchased
             while index < numberOfTokens {
-                emit Purchase(tokenId: AEntropy.purchased, receiverAddress: receiver)
+                emit Purchase(tokenId: AEntropy.Purchased, receiverAddress: receiver)
 
-                AEntropy.purchased = AEntropy.purchased + 1
+                AEntropy.Purchased = AEntropy.Purchased + 1
                 index = index + 1
             }
         }
@@ -452,14 +422,14 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         // then the administrator account running:
         // transactions/Posterity/administrator/deposit_minter_capability.cdc
         //
-        pub fun createNewMinter(): @Minter {
+        access(all) fun createNewMinter(): @Minter {
             let Minter <- create Minter()
             AEntropy.minters[Minter.uuid] = true
             emit MinterCreated(minterId: Minter.uuid)
             return <- Minter
         }
 
-        pub fun revokeMinter(minterId: UInt64, status: Bool) {
+        access(all) fun revokeMinter(minterId: UInt64, status: Bool) {
             let minters = &AEntropy.minters as &{UInt64: Bool}
             minters[minterId] = status
             emit MinterState(canMint: minters[minterId]!)
@@ -467,7 +437,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         }
 
         // change AEntropy of collection info
-        pub fun changeField(key: String, value: AnyStruct) {
+        access(all) fun changeField(key: String, value: AnyStruct) {
             AEntropy.collectionInfo[key] = value
         }
     }
@@ -477,26 +447,26 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
     // Resource object that can mint new tokens.
     // The administrator stores this and passes it to the minter account as a capability wrapper resource.
     //
-    pub resource Minter {
+    access(all) resource Minter {
         // Generate the random number for the user
-        pub fun generateRandomNumber(tokenId: UInt64, receiverAddress: Address) {
+        access(all) fun generateRandomNumber(tokenId: UInt64, receiverAddress: Address) {
             // Load the tickets from the AEntropy account
             let storage = AEntropy.account.borrow<&AEntropy.AEntropyStorage>(from: AEntropy.AEntropyStoragePath)!
             // Check this ticket's state is Purchased
-            let isPurchased = storage.isPurchased(tokenId: tokenId)
+            let isPurchased = storage.isPurchased(ticketId: tokenId)
             if isPurchased {
                 // Generate random number
                 let randomId = revertibleRandom()
                 emit GenerateImage(tokenId: tokenId, receiverAddress: receiverAddress, randomNumber: randomId)
                 // Change ticket to GenerateImg
-                storage.changeToRandom(tokenId: tokenId, randomNumber: randomId)
+                storage.changeToRandom(ticketId: tokenId, randomNumber: randomId)
             } else {
                 panic("This ticket is not in the Purchased state")
             }
         }
         // mintNFT mints a new NFT and deposits
         // it in the recipients collection
-        pub fun mintTokens(
+        access(all) fun mintTokens(
             tokenId: UInt64,
             recipient: Address,
             traits: {String: AnyStruct},
@@ -509,10 +479,10 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
                 // Load the tickets from the AEntropy account
                 let storage = AEntropy.account.borrow<&AEntropy.AEntropyStorage>(from: AEntropy.AEntropyStoragePath)!
                 // Make sure the ticket's state is random
-                let ticket = storage.isRandom(tokenId: tokenId)
+                let ticket = storage.isRandom(ticketId: tokenId)
                 if ticket {
                     let nft <- create NFT(
-                        _randomID: randomNumber,
+                        _randomId: randomNumber,
                         _recipient: recipient,
                         _extra: traits,
                         _SVG: SVG,
@@ -529,17 +499,17 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
                         }
                     }
                     // Change ticket to generateImg
-                    storage.changeToGenerateImg(tokenId: tokenId)
+                    storage.changeToGenerateImg(ticketId: tokenId)
                 } else {
                     panic("This ticket is not in the Random state")
                 }
             }
         // Update an NFT SVG
-        pub fun updateSVG(tokenId: UInt64, ownerWallet: Address, svgInput: String) {
+        access(all) fun updateSVG(tokenId: UInt64, ownerWallet: Address, svgInput: String) {
             // Load the tickets from the AEntropy account
             let storage = AEntropy.account.borrow<&AEntropy.AEntropyStorage>(from: AEntropy.AEntropyStoragePath)!
             // Make sure the ticket's state is random
-            let ticket = storage.isGenerateImg(tokenId: tokenId)
+            let ticket = storage.isGenerateImg(ticketId: tokenId)
 
             if ticket {
                 let identifier = "AEntropySVGStorage_".concat(tokenId.toString()).concat("_").concat(ownerWallet.toString())
@@ -554,17 +524,17 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
 
                 recipientCollection.deposit(token: <- nft)
                 // Change ticket to Autographed
-                storage.changeToAutographed(tokenId: tokenId)
+                storage.changeToAutographed(ticketId: tokenId)
             } else {
                 panic("This ticket is not in the GenerateImg state")
             }
         }
     }
 
-    pub resource interface MinterProxyPublic {
-        pub fun setMinterCapability(cap: Capability<&Minter>)
-        pub fun generateRandomNumber(_tokenId: UInt64, _receiverAddress: Address)
-        pub fun updateSVG(nftId: UInt64, ownerWallet: Address, svgInput: String)
+    access(all) resource interface MinterProxyPublic {
+        access(all) fun setMinterCapability(cap: Capability<&Minter>)
+        access(all) fun generateRandomNumber(_tokenId: UInt64, _receiverAddress: Address)
+        access(all) fun updateSVG(nftId: UInt64, ownerWallet: Address, svgInput: String)
     }
 
     // MinterProxy
@@ -573,18 +543,18 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
     // The resource that this capability represents can be deleted by the account
     // holding the administrator resource.
     // in order to unilaterally revoke minting capability if needed.
-    pub resource MinterProxy: MinterProxyPublic {
+    access(all) resource MinterProxy: MinterProxyPublic {
 
         // access(self) so nobody else can copy the capability and use it.
         access(self) var minterCapability: Capability<&Minter>?
 
         // Anyone can call this, but only the admin can create Minter capabilities,
         // so the type system constrains this to being called by the admin.
-        pub fun setMinterCapability(cap: Capability<&Minter>) {
+        access(all) fun setMinterCapability(cap: Capability<&Minter>) {
             self.minterCapability = cap
         }
 
-        pub fun generateRandomNumber(_tokenId: UInt64, _receiverAddress: Address) {
+        access(all) fun generateRandomNumber(_tokenId: UInt64, _receiverAddress: Address) {
             pre {
                 self.minterCapability != nil: "Minter capability has not been set"
             }
@@ -594,7 +564,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
             .generateRandomNumber(tokenId: _tokenId, receiverAddress: _receiverAddress)
         }
 
-        pub fun mintTokens(
+        access(all) fun mintTokens(
             _tokenId: UInt64,
             _recipient: Address,
             _traits: {String: AnyStruct},
@@ -615,7 +585,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
                 )
 
         }
-        pub fun updateSVG(nftId: UInt64, ownerWallet: Address, svgInput: String) {
+        access(all) fun updateSVG(nftId: UInt64, ownerWallet: Address, svgInput: String) {
             return self.minterCapability!
             .borrow()!
             .updateSVG(tokenId: nftId, ownerWallet: ownerWallet, svgInput: svgInput)
@@ -628,7 +598,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
 
 
     // public function that anyone can call to create a new empty collection
-    pub fun createEmptyCollection(): @NonFungibleToken.Collection {
+    access(all) fun createEmptyCollection(): @NonFungibleToken.Collection {
         return <- create Collection()
     }
 
@@ -636,18 +606,18 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
     // Anyone can call this, but the MinterProxy cannot mint without a Minter capability,
     // and only the administrator can provide that.
     //
-    pub fun createMinterProxy(): @MinterProxy {
+    access(all) fun createMinterProxy(): @MinterProxy {
         return <- create MinterProxy()
     }
 
     // public function that anyone can call to purchase a randomId
-    pub fun purchase(payment: @FungibleToken.Vault, numberOfTokens: UInt64, receiver: Address) {
+    access(all) fun purchase(payment: @FungibleToken.Vault, numberOfTokens: UInt64, receiver: Address) {
         pre {
             self.saleActive == true: "Sale is not active"
             self.script != "": "Script has not been set yet"
             self.traitScript != "": "Traits has not been set yet"
             self.pricePerToken * UFix64(numberOfTokens) == payment.balance: "Payment is incorrect"
-            self.purchased + numberOfTokens <= self.maxSupply: "Not enough supply available"
+            self.Purchased + numberOfTokens <= self.maxSupply: "Not enough supply available"
             self.maxTokensPerPurchase >= numberOfTokens: "Max number of tokens per purchase is ".concat(self.maxTokensPerPurchase.toString())
         }
         // Give paymennt to Entropy account
@@ -659,14 +629,14 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         var index: UInt64 = 0
 		let storage = AEntropy.account.borrow<&AEntropy.AEntropyStorage>(from: AEntropy.AEntropyStoragePath)!
         while index < numberOfTokens {
-            if !storage.isPurchased(tokenId: self.purchased) {
+            if !storage.isPurchased(ticketId: self.Purchased) {
                 // Add a ticket to the contract's storage
-                storage.addTicket(tokenId: self.purchased, collectorAddress: receiver)
+                storage.addTicket(ticketId: self.Purchased, collectorAddress: receiver)
                 // Increase contract's ticket supply
                 AEntropy.ticketSupply = AEntropy.ticketSupply + 1 
-                emit Purchase(tokenId: self.purchased, receiverAddress: receiver)
-                // Update purchased
-                self.purchased = self.purchased + 1
+                emit Purchase(tokenId: self.Purchased, receiverAddress: receiver)
+                // Update Purchased
+                self.Purchased = self.Purchased + 1
                 index = index + 1
             }
         }
@@ -674,7 +644,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
 
     access(contract) fun isPurchased(tokenId: UInt64): Bool {
 		let storage = AEntropy.account.borrow<&AEntropy.AEntropyStorage>(from: AEntropy.AEntropyStoragePath)!
-        return storage.isPurchased(tokenId: tokenId)
+        return storage.isPurchased(ticketId: tokenId)
     }
 
     /// Function that resolves a metadata view for this contract.
@@ -682,7 +652,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
     /// @param view: The Type of the desired view.
     /// @return A structure representing the requested view.
     ///
-    pub fun resolveView(_ view: Type): AnyStruct? {
+    access(all) fun resolveView(_ view: Type): AnyStruct? {
         switch view {
             case Type<MetadataViews.NFTCollectionData>():
                 return MetadataViews.NFTCollectionData(
@@ -712,18 +682,18 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         return nil
     }
 
-    pub fun getCollectionInfo(): {String: AnyStruct} {
+    access(all) fun getCollectionInfo(): {String: AnyStruct} {
         let collectionInfo = self.collectionInfo
         collectionInfo["totalSupply"] = self.totalSupply
         collectionInfo["version"] = 1
         return collectionInfo
     }
 
-    pub fun getCollectionAttribute(key: String): AnyStruct {
+    access(all) fun getCollectionAttribute(key: String): AnyStruct {
         return self.collectionInfo[key] ?? panic(key.concat(" is not an attribute in this collection."))
     }
 
-    pub fun getTickets(): {UInt64: AEntropy.Ticket}? {
+    access(all) fun getTickets(): {UInt64: AEntropy.Ticket}? {
         // Load the tickets from the AEntropy account
         let AEntropyStorageRef = getAccount(self.account.address).getCapability(AEntropy.AEntropyStoragePublicPath)
                       .borrow<&AEntropy.AEntropyStorage{AEntropy.AEntropyStoragePublic}>()
@@ -732,13 +702,13 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         return AEntropyStorageRef.getTickets()
     }
 
-    pub fun getTicket(tokenId: UInt64): Ticket? {
+    access(all) fun getTicket(tokenId: UInt64): Ticket? {
         // Load the tickets from the AEntropy account
         let AEntropyStorageRef = getAccount(self.account.address).getCapability(AEntropy.AEntropyStoragePublicPath)
                       .borrow<&AEntropy.AEntropyStorage{AEntropy.AEntropyStoragePublic}>()
                       ?? panic("Could not borrow a reference to the capability")
 
-        return AEntropyStorageRef.getTicket(tokenId: tokenId)
+        return AEntropyStorageRef.getTicket(ticketId: tokenId)
     }
 
     init() {
@@ -751,7 +721,7 @@ pub contract AEntropy: NonFungibleToken, ViewResolver {
         self.script = ""
         self.traitScript = ""
         self.saleActive = false
-        self.purchased = 0
+        self.Purchased = 0
         self.maxTokensPerPurchase = 5
         self.nftStorage <- {}
         self.minters = {}
