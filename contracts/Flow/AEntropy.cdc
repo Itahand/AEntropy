@@ -609,7 +609,7 @@ access(all) contract AEntropy: NonFungibleToken, ViewResolver {
     }
 
     // public function that anyone can call to purchase a randomId
-    access(all) fun purchase(payment: @FungibleToken.Vault, numberOfTokens: UInt64, receiver: Address) {
+    access(all) fun purchase(payment: @FlowToken.Vault, numberOfTokens: UInt64, receiver: Address) {
         pre {
             self.saleActive == true: "Sale is not active"
             self.script != "": "Script has not been set yet"
