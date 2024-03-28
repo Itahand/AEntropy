@@ -533,8 +533,6 @@ access(all) contract AEntropy: NonFungibleToken, ViewResolver {
 
     access(all) resource interface MinterProxyPublic {
         access(all) fun setMinterCapability(cap: Capability<&Minter>)
-        access(all) fun generateRandomNumber(_tokenId: UInt64, _receiverAddress: Address)
-        access(all) fun updateSVG(nftId: UInt64, ownerWallet: Address, svgInput: String)
     }
 
     // MinterProxy
